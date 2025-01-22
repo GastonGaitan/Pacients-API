@@ -2,6 +2,8 @@ from typing import Optional
 from fastapi import FastAPI, Path
 from pydantic import BaseModel, EmailStr, Field
 from pacient import Pacient
+from starlette import status
+from fastapi import HTTPException
 
 app = FastAPI()
 
@@ -29,11 +31,11 @@ pacients = [
     Pacient(id=3, name="Alice Johnson", phone_number="555-555-5555", email="alicejohnson@example.com", document_picture="path/to/document3.jpg")
 ]
 
-@app.get("/show_all_pacients")
+@app.get("/show_all_pacients", status_code=status.HTTP_200_OK)
 async def show_all_pacients():
     return pacients
 
-@app.get("/filter_pacients")
+@app.get("/filter_pacients", status_code=status.HTTP_200_OK)
 async def filter_pacients(key: str, value: str):
     filtered_pacients = []
     for pacient in pacients:
@@ -47,26 +49,29 @@ async def filter_pacients(key: str, value: str):
                     filtered_pacients.append(pacient)
     return filtered_pacients
 
-@app.post("/create_pacient")
+@app.post("/create_pacient", status_code=status.HTTP_201_CREATED)
 async def create_pacient(pacient: Pacient):
+    for existing_pacient in pacients:
+        if existing_pacient.email == pacient.email:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Pacient with this email already exists")
     new_pacient = Pacient(id=len(pacients) + 1, name=pacient.name, phone_number=pacient.phone_number, email=pacient.email, document_picture=pacient.document_picture)
     pacients.append(new_pacient)
     return {"message": "Pacient created successfully"}
 
-@app.put("/update_pacient/{pacient_id}")
+@app.put("/update_pacient/{pacient_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def update_pacient(key: str, value: str, pacient_id: int = Path(gt=0, lt=len(pacients) + 1)):
     for pacient in pacients:
         if pacient.id == pacient_id:
             if hasattr(pacient, key):
                 setattr(pacient, key, value)
                 return {"message": "Pacient updated successfully"}
-            return {f"error": "atribute {key} not found"}
-    return {"error": "Pacient not found"}
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Attribute '{key}' not found")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pacient not found")
 
-@app.delete("/delete_pacient/{pacient_id}") 
-async def delete_pacient(pacient_id: int = Path(gt=0, lt=len(pacients) + 1)):
+@app.delete("/delete_pacient/{pacient_id}", status_code=status.HTTP_200_OK)
+async def delete_pacient(pacient_id: int = Path(gt=0)):
     for pacient in pacients:
         if pacient.id == int(pacient_id):
             pacients.remove(pacient)
             return {"message": "Pacient deleted successfully"}
-    return {"error": "Pacient not found"}
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pacient id not found")
