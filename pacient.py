@@ -1,7 +1,6 @@
 
 from pydantic import BaseModel, EmailStr
 
-
 class Pacient(BaseModel):
     id: int
     name: str
