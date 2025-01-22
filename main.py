@@ -55,3 +55,11 @@ async def update_pacient(pacient_id: int, key: str, value: str):
             pacient[key] = value
             return {"message": "Pacient updated successfully"}
     return {"error": "Pacient not found"}
+
+@app.delete("/delete_pacient/{pacient_id}")
+async def delete_pacient(pacient_id: int):
+    for pacient in pacients:
+        if pacient["id"] == pacient_id:
+            pacients.remove(pacient)
+            return {"message": "Pacient deleted successfully"}
+    return {"error": "Pacient not found"}
