@@ -1,14 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, EmailStr
+from pacient import Pacient
 
 app = FastAPI()
-
-class Pacient(BaseModel):
-    id: int
-    name: str
-    phone_number: str
-    email: EmailStr
-    document_picture: str
 
 pacients = [
     {
