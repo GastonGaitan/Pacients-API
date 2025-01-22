@@ -29,8 +29,8 @@ pacients = [
     },
 ]
 
-@app.get("/show_pacients")
-async def show_pacients():
+@app.get("/show_all_pacients")
+async def show_all_pacients():
     return pacients
 
 @app.get("/filter_pacients")
