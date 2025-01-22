@@ -4,28 +4,17 @@ from pacient import Pacient
 
 app = FastAPI()
 
+class Pacient(BaseModel):
+    id: int = None
+    name: str
+    phone_number: str
+    email: EmailStr
+    document_picture: str
+
 pacients = [
-    {
-        "id": 1,
-        "name": "Gaston Gaitan",
-        "phone_number": "3487235569",
-        "email": "gaston-gaitan@hotmail.com",
-        "document_picture": "doc_gaston_gaitan_3487235569.jpg"
-    },
-    {
-        "id": 2,
-        "name": "Nicolas Capdepon",
-        "phone_number": "3487235569",
-        "email": "nicolas-capdepon@hotmail.com",
-        "document_picture": "doc_nico_capde_3487235569.jpg"
-    },
-    {
-        "id": 3,
-        "name": "Vicente ismael",
-        "phone_number": "34872355629",
-        "email": "nicolas-capdepon@hotmail.com",
-        "document_picture": "doc_nico_capde_3487235569.jpg"
-    },
+    Pacient(id=1, name="John Doe", phone_number="123-456-7890", email="johndoe@example.com", document_picture="path/to/document1.jpg"),
+    Pacient(id=2, name="Jane Smith", phone_number="987-654-3210", email="janesmith@example.com", document_picture="path/to/document2.jpg"),
+    Pacient(id=3, name="Alice Johnson", phone_number="555-555-5555", email="alicejohnson@example.com", document_picture="path/to/document3.jpg")
 ]
 
 @app.get("/show_all_pacients")
@@ -39,7 +28,8 @@ async def filter_pacients(key: str, value: str):
 
 @app.post("/create_pacient")
 async def create_pacient(pacient: Pacient):
-    pacients.append(pacient.model_dump())
+    new_pacient = Pacient(id=len(pacients) + 1, name=pacient.name, phone_number=pacient.phone_number, email=pacient.email, document_picture=pacient.document_picture)
+    pacients.append(new_pacient)
     return {"message": "Pacient created successfully"}
 
 @app.put("/update_pacient/{pacient_id}")
@@ -53,7 +43,7 @@ async def update_pacient(pacient_id: int, key: str, value: str):
 @app.delete("/delete_pacient/{pacient_id}")
 async def delete_pacient(pacient_id: int):
     for pacient in pacients:
-        if pacient["id"] == pacient_id:
+        if pacient.id == int(pacient_id):
             pacients.remove(pacient)
             return {"message": "Pacient deleted successfully"}
     return {"error": "Pacient not found"}
