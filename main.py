@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import FastAPI
+from fastapi import FastAPI, Path
 from pydantic import BaseModel, EmailStr, Field
 from pacient import Pacient
 
@@ -7,10 +7,10 @@ app = FastAPI()
 
 class Pacient(BaseModel):
     id: Optional[int] = Field(description="Unique identifier for the pacient", default=None)
-    name: str
-    phone_number: str
-    email: EmailStr
-    document_picture: str
+    name: str = Field(min_length=1)
+    phone_number: str = Field(min_length=6)
+    email: EmailStr 
+    document_picture: str = Field(description="Path to the document picture", min_length=4)
 
     model_config = {
         "json_schema_extra": {
@@ -54,15 +54,17 @@ async def create_pacient(pacient: Pacient):
     return {"message": "Pacient created successfully"}
 
 @app.put("/update_pacient/{pacient_id}")
-async def update_pacient(pacient_id: int, key: str, value: str):
+async def update_pacient(key: str, value: str, pacient_id: int = Path(gt=0, lt=len(pacients) + 1)):
     for pacient in pacients:
-        if hasattr(pacient, key):
-            setattr(pacient, key, value)
-            return {"message": "Pacient updated successfully"}
+        if pacient.id == pacient_id:
+            if hasattr(pacient, key):
+                setattr(pacient, key, value)
+                return {"message": "Pacient updated successfully"}
+            return {f"error": "atribute {key} not found"}
     return {"error": "Pacient not found"}
 
-@app.delete("/delete_pacient/{pacient_id}")
-async def delete_pacient(pacient_id: int):
+@app.delete("/delete_pacient/{pacient_id}") 
+async def delete_pacient(pacient_id: int = Path(gt=0, lt=len(pacients) + 1)):
     for pacient in pacients:
         if pacient.id == int(pacient_id):
             pacients.remove(pacient)
