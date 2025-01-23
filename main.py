@@ -4,9 +4,20 @@ from pydantic import BaseModel, EmailStr, Field
 from pacient import Pacient
 from starlette import status
 from fastapi import HTTPException
+from contextlib import asynccontextmanager
+from app.util.init_db import create_tables
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    #Inicialize DB at Start
+    print('Created')
+    create_tables()
+    yield
 
+
+app = FastAPI(lifespan=lifespan)
+
+# Agregar campos email confirmado y numero de telefono confirmado
 class Pacient(BaseModel):
     id: Optional[int] = Field(description="Unique identifier for the pacient", default=None)
     name: str = Field(min_length=1)
@@ -49,6 +60,7 @@ async def filter_pacients(key: str, value: str):
                     filtered_pacients.append(pacient)
     return filtered_pacients
 
+# Las restricciones de numero de telefono y email no deberian aplicarse si el mail no esta confirmado
 @app.post("/create_pacient", status_code=status.HTTP_201_CREATED)
 async def create_pacient(pacient: Pacient):
     for existing_pacient in pacients:
