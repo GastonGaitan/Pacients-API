@@ -4,18 +4,9 @@ from pydantic import BaseModel, EmailStr, Field
 from pacient import Pacient
 from starlette import status
 from fastapi import HTTPException
-from contextlib import asynccontextmanager
-from app.util.init_db import create_tables
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    #Inicialize DB at Start
-    print('Created')
-    create_tables()
-    yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 # Agregar campos email confirmado y numero de telefono confirmado
 class Pacient(BaseModel):
