@@ -79,19 +79,23 @@ async def create_pacient(name: str = Form(), phone_number: str = Form(), email: 
     if image.content_type != "image/jpeg":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only JPG images are allowed")
 
-    # Guardar la imagen en el servidor
-    image_path = os.path.join(UPLOAD_DIR, image.filename)
-    with open(image_path, "wb") as buffer:
-        buffer.write(await image.read())
-
     # Crear un nuevo paciente con los datos proporcionados
+    new_pacient_id = len(pacients) + 1
     new_pacient = Pacient(
-        id=len(pacients) + 1,
+        id=new_pacient_id,
         name=name,
         phone_number=phone_number,
         email=email,
-        document_picture_source=image_path
+        document_picture_source=None  # Se actualizará después de guardar la imagen
     )
+
+    # Guardar la imagen en el servidor con el nombre del id del paciente
+    image_path = os.path.join(UPLOAD_DIR, f"{new_pacient_id}.jpg")
+    with open(image_path, "wb") as buffer:
+        buffer.write(await image.read())
+
+    # Actualizar la fuente de la imagen del paciente
+    new_pacient.document_picture_source = image_path
     pacients.append(new_pacient)
 
     return {"message": "Pacient created successfully", "pacient": new_pacient}
