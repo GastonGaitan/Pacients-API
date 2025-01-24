@@ -8,7 +8,7 @@ from fastapi import HTTPException
 app = FastAPI()
 
 # Directorio donde se guardarán las imágenes
-UPLOAD_DIR = "pacient_document_images"
+UPLOAD_DIR = "media/pacient_document_images"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 class Pacient(BaseModel):
@@ -20,17 +20,6 @@ class Pacient(BaseModel):
         description="Path to the document picture",
         default=None
     )
-
-    # model_config = {
-    #     "json_schema_extra": {
-    #         "example": {
-    #             "name": "John Doe",
-    #             "phone_number": "123-456-7890",
-    #             "email": "john.doe@gmail.com",
-    #             "document_picture": "document_pacient_id_1.jpg"
-    #         }
-    #     }
-    # }
 
 pacients = [
     Pacient(id=1, name="John Doe", phone_number="123-456-7890", email="johndoe@example.com", document_picture="path/to/document1.jpg"),
