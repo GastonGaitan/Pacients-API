@@ -1,29 +1,36 @@
+import os
 from typing import Optional
-from fastapi import FastAPI, Path
+from fastapi import FastAPI, Form, Path, UploadFile
 from pydantic import BaseModel, EmailStr, Field
-from pacient import Pacient
 from starlette import status
 from fastapi import HTTPException
 
 app = FastAPI()
+
+# Directorio donde se guardarán las imágenes
+UPLOAD_DIR = "pacient_document_images"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 class Pacient(BaseModel):
     id: Optional[int] = Field(description="Unique identifier for the pacient", default=None)
     name: str = Field(min_length=1)
     phone_number: str = Field(min_length=6)
     email: EmailStr 
-    document_picture: str = Field(description="Path to the document picture", min_length=4)
+    document_picture_source: Optional[str] = Field(
+        description="Path to the document picture",
+        default=None
+    )
 
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "name": "John Doe",
-                "phone_number": "123-456-7890",
-                "email": "john.doe@gmail.com",
-                "document_picture": "document_pacient_id_1.jpg"
-            }
-        }
-    }
+    # model_config = {
+    #     "json_schema_extra": {
+    #         "example": {
+    #             "name": "John Doe",
+    #             "phone_number": "123-456-7890",
+    #             "email": "john.doe@gmail.com",
+    #             "document_picture": "document_pacient_id_1.jpg"
+    #         }
+    #     }
+    # }
 
 pacients = [
     Pacient(id=1, name="John Doe", phone_number="123-456-7890", email="johndoe@example.com", document_picture="path/to/document1.jpg"),
@@ -49,14 +56,46 @@ async def filter_pacients(key: str, value: str):
                     filtered_pacients.append(pacient)
     return filtered_pacients
 
+# @app.post("/create_pacient", status_code=status.HTTP_201_CREATED)
+# async def create_pacient(pacient: Pacient):
+#     for existing_pacient in pacients:
+#         if existing_pacient.email == pacient.email:
+#             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Pacient with this email already exists")
+#     new_pacient = Pacient(id=len(pacients) + 1, name=pacient.name, phone_number=pacient.phone_number, email=pacient.email, document_picture=pacient.document_picture)
+#     pacients.append(new_pacient)
+#     return {"message": "Pacient created successfully"}
+
 @app.post("/create_pacient", status_code=status.HTTP_201_CREATED)
-async def create_pacient(pacient: Pacient):
+async def create_pacient(name: str = Form(), phone_number: str = Form(), email: EmailStr = Form(), image: UploadFile = Form()):
+    """
+    Crea un nuevo paciente con los datos proporcionados y guarda la imagen en el servidor.
+    """
+    # Validar si ya existe un paciente con el mismo email
     for existing_pacient in pacients:
-        if existing_pacient.email == pacient.email:
+        if existing_pacient.email == email:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Pacient with this email already exists")
-    new_pacient = Pacient(id=len(pacients) + 1, name=pacient.name, phone_number=pacient.phone_number, email=pacient.email, document_picture=pacient.document_picture)
+
+    # Validar que la imagen sea de tipo JPG
+    if image.content_type != "image/jpeg":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only JPG images are allowed")
+
+    # Guardar la imagen en el servidor
+    image_path = os.path.join(UPLOAD_DIR, image.filename)
+    with open(image_path, "wb") as buffer:
+        buffer.write(await image.read())
+
+    # Crear un nuevo paciente con los datos proporcionados
+    new_pacient = Pacient(
+        id=len(pacients) + 1,
+        name=name,
+        phone_number=phone_number,
+        email=email,
+        document_picture_source=image_path
+    )
     pacients.append(new_pacient)
-    return {"message": "Pacient created successfully"}
+
+    return {"message": "Pacient created successfully", "pacient": new_pacient}
+
 
 @app.put("/update_pacient/{pacient_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def update_pacient(key: str, value: str, pacient_id: int = Path(gt=0, lt=len(pacients) + 1)):
