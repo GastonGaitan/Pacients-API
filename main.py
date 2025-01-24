@@ -45,15 +45,6 @@ async def filter_pacients(key: str, value: str):
                     filtered_pacients.append(pacient)
     return filtered_pacients
 
-# @app.post("/create_pacient", status_code=status.HTTP_201_CREATED)
-# async def create_pacient(pacient: Pacient):
-#     for existing_pacient in pacients:
-#         if existing_pacient.email == pacient.email:
-#             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Pacient with this email already exists")
-#     new_pacient = Pacient(id=len(pacients) + 1, name=pacient.name, phone_number=pacient.phone_number, email=pacient.email, document_picture=pacient.document_picture)
-#     pacients.append(new_pacient)
-#     return {"message": "Pacient created successfully"}
-
 @app.post("/create_pacient", status_code=status.HTTP_201_CREATED)
 async def create_pacient(name: str = Form(), phone_number: str = Form(), email: EmailStr = Form(), image: UploadFile = Form()):
     """
@@ -88,7 +79,6 @@ async def create_pacient(name: str = Form(), phone_number: str = Form(), email: 
     pacients.append(new_pacient)
 
     return {"message": "Pacient created successfully", "pacient": new_pacient}
-
 
 @app.put("/update_pacient/{pacient_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def update_pacient(key: str, value: str, pacient_id: int = Path(gt=0, lt=len(pacients) + 1)):
