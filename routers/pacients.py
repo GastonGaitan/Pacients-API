@@ -5,7 +5,9 @@ from database import engine, SessionLocal
 from sqlalchemy.orm import Session
 from typing import Annotated
 import os
-from routers import auth
+from .auth import get_current_user
+import smtplib
+from email.mime.multipart import MIMEMultipart
 
 router = APIRouter()
 
@@ -19,8 +21,13 @@ def get_db():
     finally:
         db.close()
 
+
+
+async def send_confirmation_email(email: str):
+    pass
+
 db_dependency = Annotated[Session, Depends(get_db)]
-user_dependency = Annotated[dict, Depends(auth.get_current_user)]
+user_dependency = Annotated[dict, Depends(get_current_user)]
 
 class PacientRequest(BaseModel):
     name: str = Field(min_length=1)
@@ -28,26 +35,29 @@ class PacientRequest(BaseModel):
     email: EmailStr 
     document_picture_source: str | None = None
 
-@router.get("/show_all_pacients")
-async def read_all(db: db_dependency):
-    return db.query(Pacient).all()
+@router.get("/show_all_pacients", status_code=status.HTTP_200_OK)
+async def read_all(user: user_dependency, db: db_dependency):
+    pacients = db.query(Pacient).all()
+    return pacients
 
 # Mejorar el filtrado de pacientes
 @router.get("/filter_pacients", status_code=status.HTTP_200_OK)
-async def filter_pacients(key: str, value: str, db: db_dependency):
-    pacient = db.query(Pacient).filter(getattr(Pacient, key) == value).all()
-    if not pacient:
+async def filter_pacients(user: user_dependency, key: str, value: str, db: db_dependency):
+    pacients = db.query(Pacient).filter(getattr(Pacient, key) == value).all()
+    if not pacients:
         raise HTTPException(status_code=404, detail="Pacient not found")
-    return pacient
+    return pacients
 
 @router.post("/create_pacient", status_code=status.HTTP_201_CREATED)
 async def create_pacient(
+    user: user_dependency,
     db: db_dependency,
     name: str = Form(...),
     phone_number: str = Form(...),
     email: EmailStr = Form(...),
     image: UploadFile = Form(...)
 ):
+    
     # Validate if a pacient with the same email already exists
     existing_pacient = db.query(Pacient).filter(Pacient.email == email).first()
     if existing_pacient:
@@ -79,11 +89,14 @@ async def create_pacient(
     db.commit()
     db.refresh(new_pacient)
 
+    
+
     return new_pacient
 
 # Falta agregar restriccion en caso de que se actualice a otro email que ya existe
 @router.put("/update_pacient/{pacient_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def update_pacient(
+    user: user_dependency,
     key: str,
     value: str,
     db: db_dependency,
@@ -103,7 +116,7 @@ async def update_pacient(
     return pacient
 
 @router.delete("/delete_pacient/{pacient_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_pacient(db: db_dependency, pacient_id: int = Path(gt=0)):
+async def delete_pacient(user: user_dependency, db: db_dependency, pacient_id: int = Path(gt=0)):
     pacient = db.query(Pacient).filter(Pacient.id == pacient_id).first()
     if not pacient:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pacient id not found")
