@@ -1,4 +1,4 @@
-from fastapi import Depends, APIRouter, HTTPException, Path, status, Form, UploadFile
+from fastapi import Depends, APIRouter, HTTPException, Path, status, Form, UploadFile, BackgroundTasks
 from pydantic import BaseModel, Field, EmailStr
 from models import Pacient
 from database import engine, SessionLocal
@@ -8,6 +8,8 @@ import os
 from .auth import get_current_user
 import smtplib
 from email.mime.multipart import MIMEMultipart
+from helpers.send_confirmation_email import send_confirmation_email
+
 
 router = APIRouter()
 
@@ -21,10 +23,6 @@ def get_db():
     finally:
         db.close()
 
-
-
-async def send_confirmation_email(email: str):
-    pass
 
 db_dependency = Annotated[Session, Depends(get_db)]
 user_dependency = Annotated[dict, Depends(get_current_user)]
@@ -51,6 +49,7 @@ async def filter_pacients(user: user_dependency, key: str, value: str, db: db_de
 @router.post("/create_pacient", status_code=status.HTTP_201_CREATED)
 async def create_pacient(
     user: user_dependency,
+    background_tasks: BackgroundTasks,
     db: db_dependency,
     name: str = Form(...),
     phone_number: str = Form(...),
@@ -89,8 +88,8 @@ async def create_pacient(
     db.commit()
     db.refresh(new_pacient)
 
+    background_tasks.add_task(send_confirmation_email, email, name)
     
-
     return new_pacient
 
 # Falta agregar restriccion en caso de que se actualice a otro email que ya existe
