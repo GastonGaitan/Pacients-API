@@ -9,7 +9,9 @@ from .auth import get_current_user
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from helpers.send_confirmation_email import send_confirmation_email
+from dotenv import load_dotenv
 
+load_dotenv()
 
 router = APIRouter()
 

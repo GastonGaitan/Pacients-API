@@ -10,6 +10,9 @@ from sqlalchemy.orm import Session
 from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 router = APIRouter(
     prefix="/auth",
@@ -23,8 +26,8 @@ def get_db():
     finally:
         db.close()
 
-SECRET_KEY = 'mysecretkey'
-ALGORITHM = 'HS256'
+SECRET_KEY = os.getenv('SECRET_KEY')
+ALGORITHM = os.getenv('ALGORITHM')
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/login_for_access_token")
