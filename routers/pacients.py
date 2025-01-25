@@ -90,7 +90,9 @@ async def create_pacient(
     db.commit()
     db.refresh(new_pacient)
 
-    background_tasks.add_task(send_confirmation_email, email, name)
+    background_tasks.add_task(send_confirmation_email, new_pacient, db)
+
+    # ADD SMS FUNCTIONALITY HERE
 
     return new_pacient
 
