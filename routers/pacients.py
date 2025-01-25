@@ -13,7 +13,7 @@ from helpers.send_confirmation_email import send_confirmation_email
 
 router = APIRouter()
 
-UPLOAD_DIR = "media/pacient_document_images_from_other_main"
+UPLOAD_DIR = "media/pacient_document_images"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 def get_db():
@@ -89,7 +89,7 @@ async def create_pacient(
     db.refresh(new_pacient)
 
     background_tasks.add_task(send_confirmation_email, email, name)
-    
+
     return new_pacient
 
 # Falta agregar restriccion en caso de que se actualice a otro email que ya existe
