@@ -20,6 +20,7 @@ def get_db():
         db.close()
 
 db_dependency = Annotated[Session, Depends(get_db)]
+user_dependency = Annotated[dict, Depends(auth.get_current_user)]
 
 class PacientRequest(BaseModel):
     name: str = Field(min_length=1)
@@ -27,12 +28,11 @@ class PacientRequest(BaseModel):
     email: EmailStr 
     document_picture_source: str | None = None
 
-    
-
 @router.get("/show_all_pacients")
 async def read_all(db: db_dependency):
     return db.query(Pacient).all()
 
+# Mejorar el filtrado de pacientes
 @router.get("/filter_pacients", status_code=status.HTTP_200_OK)
 async def filter_pacients(key: str, value: str, db: db_dependency):
     pacient = db.query(Pacient).filter(getattr(Pacient, key) == value).all()
