@@ -1,18 +1,17 @@
-version: '3.8'
+version: '3.9'
 
 services:
   postgres:
-    image: postgres:15
-    container_name: postgres_container
+    image: postgres:13
+    container_name: postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123456789
+      POSTGRES_PASSWORD: 41134345
       POSTGRES_DB: PacientsApi
     ports:
-      - "5433:5432"  # Puerto de tu máquina local al puerto del contenedor
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data  # Persistencia
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro  # Script para inicializar tablas
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
   postgres_data:
