@@ -11,8 +11,8 @@ class Users(Base):
     is_active = Column(Boolean, default=True)
     
 
-class Pacient(Base):
-    __tablename__ = "pacients"
+class Patient(Base):
+    __tablename__ = "patients"
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
