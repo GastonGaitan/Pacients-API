@@ -1,8 +1,11 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-SQLALCHEMY_DATABASE = 'postgresql://postgres:41134345@localhost:5432/PacientsApi'
+SQLALCHEMY_DATABASE = os.getenv("SQL_CONNECTION")
 
 engine = create_engine(SQLALCHEMY_DATABASE)
 
