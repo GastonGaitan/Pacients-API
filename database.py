@@ -1,10 +1,13 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-SQLALCHEMY_DATABASE = 'sqlite:///./pacients.db'
+SQLALCHEMY_DATABASE = os.getenv("SQL_CONNECTION")
 
-engine = create_engine(SQLALCHEMY_DATABASE, connect_args={"check_same_thread": False})
+engine = create_engine(SQLALCHEMY_DATABASE)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

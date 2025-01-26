@@ -19,4 +19,5 @@ class Pacient(Base):
     phone_number = Column(String)
     email = Column(String)
     document_picture_source = Column(String)
-    email_verified = Column(Boolean, default=False)
+    email_verification_sent = Column(Boolean, default=False)
+    sms_verification_sent = Column(Boolean, default=False)
