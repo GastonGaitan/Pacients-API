@@ -72,7 +72,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
     except jwt.JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user")
 
-@router.post("/create_api_user", status_code=status.HTTP_201_CREATED)
+@router.post("/user", status_code=status.HTTP_201_CREATED)
 async def create_api_user(db: db_dependency, create_user_request: CreateUserRequest):
     # create a new user for api access
     existing_user = db.query(Users).filter((Users.email == create_user_request.email) | (Users.username == create_user_request.username)).first()
@@ -91,11 +91,11 @@ async def create_api_user(db: db_dependency, create_user_request: CreateUserRequ
     db.add(create_user_model)
     db.commit()
 
-@router.post("/login_for_access_token", response_model=Token)
+@router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
     # Validate the user and return a new access token
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
-    token = create_access_token(user.username, user.id, timedelta(minutes=60))
+    token = create_access_token(user.username, user.id, timedelta(minutes=5))
     return {"access_token": token, 'token_type': 'bearer'}

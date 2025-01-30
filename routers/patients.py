@@ -35,12 +35,12 @@ class PatientRequest(BaseModel):
     email: EmailStr 
     document_picture_source: str | None = None
 
-@router.get("/show_all_patients", status_code=status.HTTP_200_OK)
+@router.get("/patients", status_code=status.HTTP_200_OK)
 async def read_all(user: user_dependency, db: db_dependency):
     patients = db.query(Patient).all()
     return patients
 
-# Mejorar el filtrado de patientes
+# Mejorar el filtrado de patientes, esto debería estar en el mismo endpoint que patients
 @router.get("/filter_patients", status_code=status.HTTP_200_OK)
 async def filter_patients(user: user_dependency, key: str, value: str, db: db_dependency):
     patients = db.query(Patient).filter(getattr(Patient, key) == value).all()
@@ -48,7 +48,7 @@ async def filter_patients(user: user_dependency, key: str, value: str, db: db_de
         raise HTTPException(status_code=404, detail="Patient not found")
     return patients
 
-@router.post("/create_patient", status_code=status.HTTP_201_CREATED)
+@router.post("/patients", status_code=status.HTTP_201_CREATED)
 async def create_patient(
     user: user_dependency,
     background_tasks: BackgroundTasks,
@@ -97,7 +97,7 @@ async def create_patient(
     return new_patient
 
 # Falta agregar restriccion en caso de que se actualice a otro email que ya existe
-@router.put("/update_patient/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.put("/patients/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def update_patient(
     user: user_dependency,
     key: str,
@@ -118,7 +118,7 @@ async def update_patient(
 
     return patient
 
-@router.delete("/delete_patient/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/patients/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_patient(user: user_dependency, db: db_dependency, patient_id: int = Path(gt=0)):
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not patient:
